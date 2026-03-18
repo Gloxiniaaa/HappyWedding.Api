@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using HappyWedding.Api.Data;
-using HappyWedding.Api.DTOs.Milestone;
 using HappyWedding.Api.DTOs.Wedding;
 using HappyWedding.Api.Models.Domain;
 using Microsoft.AspNetCore.Authorization;

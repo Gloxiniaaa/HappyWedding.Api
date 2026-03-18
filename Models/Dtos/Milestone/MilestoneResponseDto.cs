@@ -1,4 +1,4 @@
-namespace HappyWedding.Api.DTOs.Milestone;
+namespace HappyWedding.Api.Models.Dtos.Milestone;
 
 public class MilestoneResponseDto
 {

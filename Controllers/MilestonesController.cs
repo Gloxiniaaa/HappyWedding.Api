@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using HappyWedding.Api.Data;
-using HappyWedding.Api.DTOs.Milestone;
 using HappyWedding.Api.Models.Domain;
+using HappyWedding.Api.Models.Dtos.Milestone;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ namespace HappyWedding.Api.Controllers;
 
 [Route("api/wedding/milestones")]
 [ApiController]
-// [Authorize]
+[Authorize]
 public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
 {
     private string CurrentUserId =>
@@ -47,11 +47,11 @@ public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
         var milestone = new Milestone
         {
             WeddingId = wedding.Id,
-            Title     = dto.Title,
-            Subtitle  = dto.Subtitle,
-            Date      = dto.Date,
+            Title = dto.Title,
+            Subtitle = dto.Subtitle,
+            Date = dto.Date,
             Completed = dto.Completed,
-            Emoji     = dto.Emoji,
+            Emoji = dto.Emoji,
         };
 
         db.Milestones.Add(milestone);
@@ -74,11 +74,11 @@ public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
         if (milestone is null)
             return NotFound(new { message = "Milestone not found." });
 
-        milestone.Title     = dto.Title;
-        milestone.Subtitle  = dto.Subtitle;
-        milestone.Date      = dto.Date;
+        milestone.Title = dto.Title;
+        milestone.Subtitle = dto.Subtitle;
+        milestone.Date = dto.Date;
         milestone.Completed = dto.Completed;
-        milestone.Emoji     = dto.Emoji;
+        milestone.Emoji = dto.Emoji;
 
         await db.SaveChangesAsync();
         return Ok(MapToResponse(milestone));
@@ -106,12 +106,12 @@ public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
     // ── Mapper ────────────────────────────────────────────────────────────────
     private static MilestoneResponseDto MapToResponse(Milestone m) => new()
     {
-        Id        = m.Id,
-        Title     = m.Title,
-        Subtitle  = m.Subtitle,
-        Date      = m.Date,
+        Id = m.Id,
+        Title = m.Title,
+        Subtitle = m.Subtitle,
+        Date = m.Date,
         Completed = m.Completed,
-        Emoji     = m.Emoji,
+        Emoji = m.Emoji,
         WeddingId = m.WeddingId,
     };
 }

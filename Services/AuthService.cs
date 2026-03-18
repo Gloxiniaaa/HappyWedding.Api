@@ -31,6 +31,7 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
 
         context.Users.Add(user);
         await context.SaveChangesAsync();
+        await WeddingSeeder.SeedDefaultWeddingDataAsync(user, context);
 
         return user;
     }
