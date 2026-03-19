@@ -14,13 +14,14 @@ var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 // 2. Add CORS services
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: myAllowSpecificOrigins,
-                      policy  =>
-                      {
-                          policy.WithOrigins("http://localhost:8080") // Your frontend URL
-                                .AllowAnyHeader()
-                                .AllowAnyMethod();
-                      });
+    options.AddPolicy(
+        name: myAllowSpecificOrigins,
+        policy  =>
+        {
+            policy.WithOrigins("http://localhost:8080", "https://happy-wedding-gules.vercel.app") // Your frontend URL
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
 });
 
 
