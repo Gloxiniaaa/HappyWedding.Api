@@ -43,6 +43,7 @@ public class WeddingConfiguration : IEntityTypeConfiguration<Wedding>
             .IsRequired()
             .HasColumnType("date"); // SQL Server: date only, no time component
 
+        // delete wedding → delete its milestones
         builder.HasMany(w => w.Milestones)
             .WithOne(m => m.Wedding)
             .HasForeignKey(m => m.WeddingId)

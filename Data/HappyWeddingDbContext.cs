@@ -11,7 +11,8 @@ public class HappyWeddingDbContext(DbContextOptions<HappyWeddingDbContext> optio
     public DbSet<User> Users { get; set; }
     public DbSet<Wedding> Weddings => Set<Wedding>();
     public DbSet<Milestone> Milestones => Set<Milestone>();
-
+    public DbSet<Guest> Guests => Set<Guest>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
