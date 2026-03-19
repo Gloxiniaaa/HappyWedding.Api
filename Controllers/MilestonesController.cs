@@ -103,6 +103,26 @@ public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
         return NoContent();
     }
 
+    // PATCH api/wedding/milestones/{id}/toggle
+    [HttpPatch("{id:guid}/toggle")]
+    public async Task<IActionResult> ToggleCompleted(Guid id)
+    {
+        var wedding = await GetOwnedWeddingAsync();
+        if (wedding is null)
+            return NotFound(new { message = "No wedding found." });
+
+        var milestone = await db.Milestones
+            .FirstOrDefaultAsync(m => m.Id == id && m.WeddingId == wedding.Id);
+
+        if (milestone is null)
+            return NotFound(new { message = "Milestone not found." });
+
+        milestone.Completed = !milestone.Completed;
+
+        await db.SaveChangesAsync();
+        return Ok(MapToResponse(milestone));
+    }
+
     // ── Mapper ────────────────────────────────────────────────────────────────
     private static MilestoneResponseDto MapToResponse(Milestone m) => new()
     {
