@@ -1,6 +1,8 @@
 using System.Text;
+using FluentValidation;
 using HappyWedding.Api.Data;
 using HappyWedding.Api.Services;
+using HappyWedding.Api.Validators.Wedding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +40,10 @@ builder.Services.AddScoped<IWeddingService, WeddingService>();
 builder.Services.AddScoped<IGuestService, GuestService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
+
+// Add FluentValidation
+// builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateWeddingValidator>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
