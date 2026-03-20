@@ -43,7 +43,7 @@ Happy Wedding is a wedding planning API that allows couples and families to:
    ```
 6. Open Scalar for API docs:
    `https://localhost:{port}/scalar`
-   ![Screenshot 1](./public/Screenshot-api.png)
+   ![Screenshot 1](./Public/Screenshot-api.png)
 <!-- ### Auth
 - `POST /api/auth/register` — register new user
 - `POST /api/auth/login` — authenticate and receive JWT

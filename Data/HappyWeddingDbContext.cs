@@ -12,7 +12,9 @@ public class HappyWeddingDbContext(DbContextOptions<HappyWeddingDbContext> optio
     public DbSet<Wedding> Weddings => Set<Wedding>();
     public DbSet<Milestone> Milestones => Set<Milestone>();
     public DbSet<Guest> Guests => Set<Guest>();
-    
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
+    public DbSet<ExpenseItem> ExpenseItems => Set<ExpenseItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
