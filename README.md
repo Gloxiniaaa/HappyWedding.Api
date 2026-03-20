@@ -75,9 +75,7 @@ Happy Wedding is a wedding planning API that allows couples and families to:
 ## Links
 
 <!-- - Deployment: `https://<your-api-deploy-url>` (replace with actual URL) -->
-- Frontend repo:
-`https://github.com/Gloxiniaaa/your-love-story-planner`
-- API Documentation: 
-`https://github.com/Gloxiniaaa/your-love-story-planner`
-- Browse this source code:
-`https://github.dev/Gloxiniaaa/HappyWedding.Api`
+- [Video Demo](https://drive.google.com/drive/folders/1qQT--2sDPFoI6qyBGN25m5k89Fnlp8r_?usp=sharing)
+- [Frontend repo](https://github.com/Gloxiniaaa/your-love-story-planner)
+- [API Documentation](https://registry.scalar.com/@default-team-yeguv/apis/happyweddingapi-v1@latest#tag/auth)
+- [Browse this source code](https://github.dev/Gloxiniaaa/HappyWedding.Api)
