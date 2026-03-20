@@ -2,16 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HappyWedding.Api.Models.Dtos.Milestone;
 
-public class UpdateMilestoneDto
+public record UpdateMilestoneDto
 {
     [Required, MaxLength(200)]
-    public string Title { get; set; } = string.Empty;
+    public required string Title { get; set; } = string.Empty;
 
     [MaxLength(500)]
     public string Subtitle { get; set; } = string.Empty;
 
     [Required]
-    public DateTime Date { get; set; }
+    public required DateTime Date { get; set; }
 
     public bool Completed { get; set; }
 

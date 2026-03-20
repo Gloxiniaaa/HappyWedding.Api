@@ -2,19 +2,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HappyWedding.Api.DTOs.Wedding;
 
-public class UpdateWeddingDto
+public record UpdateWeddingDto
 {
     [Required, MaxLength(100)]
-    public string Name1 { get; set; } = string.Empty;
+    public required string Name1 { get; set; }
 
     [Required, MaxLength(100)]
-    public string Name2 { get; set; } = string.Empty;
+    public required string Name2 { get; set; }
 
     [Required]
-    public DateTime Date { get; set; }
+    public required DateTime Date { get; set; }
 
     [Required, MaxLength(300)]
-    public string Location { get; set; } = string.Empty;
+    public required string Location { get; set; }
 
     [MaxLength(500)]
     public string Tagline { get; set; } = string.Empty;

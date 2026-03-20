@@ -2,7 +2,8 @@
 using HappyWedding.Api.Models.Domain;
 
 namespace HappyWedding.Api.Models.Dtos.Guest;
-public class CreateGuestDto
+
+public record CreateGuestDto
 {
     public string Name { get; set; } = string.Empty;
     public string? Note { get; set; }

@@ -1,61 +1,40 @@
 using System.Security.Claims;
-using HappyWedding.Api.Data;
 using HappyWedding.Api.Models.Domain;
 using HappyWedding.Api.Models.Dtos.Milestone;
+using HappyWedding.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HappyWedding.Api.Controllers;
 
 [Route("api/wedding/milestones")]
 [ApiController]
 [Authorize]
-public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
+public class MilestoneController(IMilestoneService milestoneService) : ControllerBase
 {
     private string CurrentUserId =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new UnauthorizedAccessException();
 
-    private async Task<Wedding?> GetOwnedWeddingAsync() =>
-        await db.Weddings.FirstOrDefaultAsync(w => w.UserId == CurrentUserId);
-
     // GET api/wedding/milestones
     [HttpGet]
     public async Task<IActionResult> GetMilestones()
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null)
-            return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var milestones = await milestoneService.GetMilestonesAsync(userId);
 
-        var milestones = await db.Milestones
-            .Where(m => m.WeddingId == wedding.Id)
-            .Select(m => MapToResponse(m))
-            .ToListAsync();
-
-        return Ok(milestones);
+        return Ok(milestones.Select(MapToResponse).ToList());
     }
 
     // POST api/wedding/milestones
     [HttpPost]
     public async Task<IActionResult> AddMilestone([FromBody] CreateMilestoneDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null)
+        var userId = CurrentUserId;
+        var milestone = await milestoneService.AddMilestoneAsync(userId, dto);
+
+        if (milestone is null)
             return NotFound(new { message = "No wedding found." });
-
-        var milestone = new Milestone
-        {
-            WeddingId = wedding.Id,
-            Title = dto.Title,
-            Subtitle = dto.Subtitle,
-            Date = dto.Date,
-            Completed = dto.Completed,
-            Emoji = dto.Emoji,
-        };
-
-        db.Milestones.Add(milestone);
-        await db.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetMilestones), MapToResponse(milestone));
     }
@@ -64,23 +43,25 @@ public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateMilestone(Guid id, [FromBody] UpdateMilestoneDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null)
-            return NotFound(new { message = "No wedding found." });
-
-        var milestone = await db.Milestones
-            .FirstOrDefaultAsync(m => m.Id == id && m.WeddingId == wedding.Id);
+        var userId = CurrentUserId;
+        var milestone = await milestoneService.UpdateMilestoneAsync(userId, id, dto);
 
         if (milestone is null)
             return NotFound(new { message = "Milestone not found." });
 
-        milestone.Title = dto.Title;
-        milestone.Subtitle = dto.Subtitle;
-        milestone.Date = dto.Date;
-        milestone.Completed = dto.Completed;
-        milestone.Emoji = dto.Emoji;
+        return Ok(MapToResponse(milestone));
+    }
 
-        await db.SaveChangesAsync();
+    // PATCH api/wedding/milestones/{id}/toggle
+    [HttpPatch("{id:guid}/toggle")]
+    public async Task<IActionResult> ToggleCompleted(Guid id)
+    {
+        var userId = CurrentUserId;
+        var milestone = await milestoneService.ToggleCompletedAsync(userId, id);
+
+        if (milestone is null)
+            return NotFound(new { message = "Milestone not found." });
+
         return Ok(MapToResponse(milestone));
     }
 
@@ -88,39 +69,13 @@ public class MilestoneController(HappyWeddingDbContext db) : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteMilestone(Guid id)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null)
-            return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var deleted = await milestoneService.DeleteMilestoneAsync(userId, id);
 
-        var milestone = await db.Milestones
-            .FirstOrDefaultAsync(m => m.Id == id && m.WeddingId == wedding.Id);
-
-        if (milestone is null)
+        if (!deleted)
             return NotFound(new { message = "Milestone not found." });
 
-        db.Milestones.Remove(milestone);
-        await db.SaveChangesAsync();
         return NoContent();
-    }
-
-    // PATCH api/wedding/milestones/{id}/toggle
-    [HttpPatch("{id:guid}/toggle")]
-    public async Task<IActionResult> ToggleCompleted(Guid id)
-    {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null)
-            return NotFound(new { message = "No wedding found." });
-
-        var milestone = await db.Milestones
-            .FirstOrDefaultAsync(m => m.Id == id && m.WeddingId == wedding.Id);
-
-        if (milestone is null)
-            return NotFound(new { message = "Milestone not found." });
-
-        milestone.Completed = !milestone.Completed;
-
-        await db.SaveChangesAsync();
-        return Ok(MapToResponse(milestone));
     }
 
     // ── Mapper ────────────────────────────────────────────────────────────────

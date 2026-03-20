@@ -1,11 +1,10 @@
 using System.Security.Claims;
-using HappyWedding.Api.Data;
 using HappyWedding.Api.Models.Domain;
 using HappyWedding.Api.Models.Dtos.Category;
 using HappyWedding.Api.Models.Dtos.Expense;
+using HappyWedding.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace HappyWedding.Api.Controllers;
@@ -13,14 +12,11 @@ namespace HappyWedding.Api.Controllers;
 [Route("api/wedding/expenses")]
 [ApiController]
 [Authorize]
-public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
+public class ExpensesController(IExpenseService expenseService) : ControllerBase
 {
     private string CurrentUserId =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new UnauthorizedAccessException();
-
-    private async Task<Wedding?> GetOwnedWeddingAsync() =>
-        await db.Weddings.FirstOrDefaultAsync(w => w.UserId == CurrentUserId);
 
     // ── Categories ────────────────────────────────────────────────────────────
 
@@ -28,34 +24,21 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpGet("categories")]
     public async Task<IActionResult> GetCategories()
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var categories = await expenseService.GetCategoriesAsync(userId);
 
-        var categories = await db.ExpenseCategories
-            .Where(c => c.WeddingId == wedding.Id)
-            .Include(c => c.Expenses)
-            .Select(c => MapCategoryToResponse(c))
-            .ToListAsync();
-
-        return Ok(categories);
+        return Ok(categories.Select(MapCategoryToResponse).ToList());
     }
 
     // POST api/wedding/expenses/categories
     [HttpPost("categories")]
     public async Task<IActionResult> AddCategory([FromBody] CreateCategoryDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var category = await expenseService.AddCategoryAsync(userId, dto);
 
-        var category = new ExpenseCategory
-        {
-            WeddingId = wedding.Id,
-            Name = dto.Name.Trim(),
-            Emoji = dto.Emoji.Trim(),
-        };
-
-        db.ExpenseCategories.Add(category);
-        await db.SaveChangesAsync();
+        if (category is null)
+            return NotFound(new { message = "No wedding found." });
 
         return CreatedAtAction(nameof(GetCategories), MapCategoryToResponse(category));
     }
@@ -64,17 +47,12 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpPut("categories/{id:guid}")]
     public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] UpdateCategoryDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var category = await expenseService.UpdateCategoryAsync(userId, id, dto);
 
-        var category = await db.ExpenseCategories
-            .FirstOrDefaultAsync(c => c.Id == id && c.WeddingId == wedding.Id);
-        if (category is null) return NotFound(new { message = "Category not found." });
+        if (category is null)
+            return NotFound(new { message = "Category not found." });
 
-        category.Name = dto.Name.Trim();
-        category.Emoji = dto.Emoji.Trim();
-
-        await db.SaveChangesAsync();
         return Ok(MapCategoryToResponse(category));
     }
 
@@ -82,15 +60,12 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpDelete("categories/{id:guid}")]
     public async Task<IActionResult> DeleteCategory(Guid id)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var deleted = await expenseService.DeleteCategoryAsync(userId, id);
 
-        var category = await db.ExpenseCategories
-            .FirstOrDefaultAsync(c => c.Id == id && c.WeddingId == wedding.Id);
-        if (category is null) return NotFound(new { message = "Category not found." });
+        if (!deleted)
+            return NotFound(new { message = "Category not found." });
 
-        db.ExpenseCategories.Remove(category); // cascade deletes expenses
-        await db.SaveChangesAsync();
         return NoContent();
     }
 
@@ -100,24 +75,11 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpPost("categories/{categoryId:guid}/items")]
     public async Task<IActionResult> AddExpense(Guid categoryId, [FromBody] CreateExpenseDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var expense = await expenseService.AddExpenseAsync(userId, categoryId, dto);
 
-        var category = await db.ExpenseCategories
-            .FirstOrDefaultAsync(c => c.Id == categoryId && c.WeddingId == wedding.Id);
-        if (category is null) return NotFound(new { message = "Category not found." });
-
-        var expense = new ExpenseItem
-        {
-            CategoryId = categoryId,
-            Name = dto.Name.Trim(),
-            EstimateCost = dto.EstimateCost,
-            ActualCost = dto.ActualCost,
-            Paid = dto.Paid,
-        };
-
-        db.ExpenseItems.Add(expense);
-        await db.SaveChangesAsync();
+        if (expense is null)
+            return NotFound(new { message = "Category not found." });
 
         return CreatedAtAction(nameof(GetCategories), MapExpenseToResponse(expense));
     }
@@ -126,20 +88,12 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpPut("items/{id:guid}")]
     public async Task<IActionResult> UpdateExpense(Guid id, [FromBody] UpdateExpenseDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var expense = await expenseService.UpdateExpenseAsync(userId, id, dto);
 
-        var expense = await db.ExpenseItems
-            .Include(e => e.Category)
-            .FirstOrDefaultAsync(e => e.Id == id && e.Category.WeddingId == wedding.Id);
-        if (expense is null) return NotFound(new { message = "Expense not found." });
+        if (expense is null)
+            return NotFound(new { message = "Expense not found." });
 
-        expense.Name = dto.Name.Trim();
-        expense.EstimateCost = dto.EstimateCost;
-        expense.ActualCost = dto.ActualCost;
-        expense.Paid = dto.Paid;
-
-        await db.SaveChangesAsync();
         return Ok(MapExpenseToResponse(expense));
     }
 
@@ -147,16 +101,12 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpPatch("items/{id:guid}/toggle")]
     public async Task<IActionResult> TogglePaid(Guid id)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var expense = await expenseService.TogglePaidAsync(userId, id);
 
-        var expense = await db.ExpenseItems
-            .Include(e => e.Category)
-            .FirstOrDefaultAsync(e => e.Id == id && e.Category.WeddingId == wedding.Id);
-        if (expense is null) return NotFound(new { message = "Expense not found." });
+        if (expense is null)
+            return NotFound(new { message = "Expense not found." });
 
-        expense.Paid = !expense.Paid;
-        await db.SaveChangesAsync();
         return Ok(MapExpenseToResponse(expense));
     }
 
@@ -164,16 +114,12 @@ public class ExpensesController(HappyWeddingDbContext db) : ControllerBase
     [HttpDelete("items/{id:guid}")]
     public async Task<IActionResult> DeleteExpense(Guid id)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var deleted = await expenseService.DeleteExpenseAsync(userId, id);
 
-        var expense = await db.ExpenseItems
-            .Include(e => e.Category)
-            .FirstOrDefaultAsync(e => e.Id == id && e.Category.WeddingId == wedding.Id);
-        if (expense is null) return NotFound(new { message = "Expense not found." });
+        if (!deleted)
+            return NotFound(new { message = "Expense not found." });
 
-        db.ExpenseItems.Remove(expense);
-        await db.SaveChangesAsync();
         return NoContent();
     }
 

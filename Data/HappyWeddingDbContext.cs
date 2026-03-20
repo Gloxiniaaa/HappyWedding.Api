@@ -1,7 +1,4 @@
-using HappyWedding.Api.Data.Configurations;
 using HappyWedding.Api.Models.Domain;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HappyWedding.Api.Data;

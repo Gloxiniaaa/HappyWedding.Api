@@ -1,6 +1,6 @@
 namespace HappyWedding.Api.Models.Dtos.Expense;
 
-public class CreateExpenseDto
+public record CreateExpenseDto
 {
     public string Name { get; set; } = string.Empty;
     public long EstimateCost { get; set; }

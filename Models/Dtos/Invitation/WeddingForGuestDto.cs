@@ -3,7 +3,7 @@ using HappyWedding.Api.Models.Dtos.Milestone;
 
 namespace HappyWedding.Api.Models.Dtos.Invitation;
 
-public class WeddingForGuestDto
+public record WeddingForGuestDto
 {
     public Guid Id { get; set; }
     public string Name1 { get; set; } = string.Empty;

@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HappyWedding.Api.Data.Configurations;
 
-// ExpenseCategoryConfiguration.cs
 public class ExpenseCategoryConfiguration : IEntityTypeConfiguration<ExpenseCategory>
 {
     public void Configure(EntityTypeBuilder<ExpenseCategory> builder)

@@ -2,7 +2,7 @@ using HappyWedding.Api.Models.Domain;
 
 namespace HappyWedding.Api.Models.Dtos.Guest;
 
-public class GuestResponseDto
+public record GuestResponseDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
