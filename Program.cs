@@ -24,16 +24,15 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddSingleton<CloudinaryDotNet.Cloudinary>(sp =>
+
+// ── Bind Cloudinary settings ──────────────────────────────────────────────────
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("Cloudinary"));
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 {
-    var config = builder.Configuration.GetSection("Cloudinary");
-    var account = new CloudinaryDotNet.Account(
-        config["CloudName"],
-        config["ApiKey"],
-        config["ApiSecret"]
-    );
-    return new CloudinaryDotNet.Cloudinary(account);
+   o.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50 MB
 });
+// ── Register services ─────────────────────────────────────────────────────────
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -43,6 +42,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<HappyWeddingDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWeddingService, WeddingService>();
 builder.Services.AddScoped<IGuestService, GuestService>();

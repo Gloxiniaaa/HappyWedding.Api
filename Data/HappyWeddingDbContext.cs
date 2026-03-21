@@ -11,6 +11,7 @@ public class HappyWeddingDbContext(DbContextOptions<HappyWeddingDbContext> optio
     public DbSet<Guest> Guests => Set<Guest>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<ExpenseItem> ExpenseItems => Set<ExpenseItem>();
+    public DbSet<WeddingPhoto> WeddingPhotos => Set<WeddingPhoto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
