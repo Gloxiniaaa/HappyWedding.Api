@@ -74,12 +74,12 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
             new Claim(ClaimTypes.Role, user.Role)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("Jwt:Key")));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("Authentication:Jwt:Key")));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var tokenDesciptor = new JwtSecurityToken
         (
-            issuer: configuration.GetValue<string>("Jwt:Issuer"),
-            audience: configuration.GetValue<string>("Jwt:Audience"),
+            issuer: configuration.GetValue<string>("Authentication:Jwt:Issuer"),
+            audience: configuration.GetValue<string>("Authentication:Jwt:Audience"),
             claims: claims,
             expires: DateTime.Now.AddHours(1),
             signingCredentials: creds
