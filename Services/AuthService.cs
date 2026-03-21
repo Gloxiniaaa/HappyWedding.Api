@@ -16,7 +16,7 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
 {
     public async Task<User?> RegisterAsync(UserDto request)
     {
-        if (await context.Users.AnyAsync(u => u.Username == request.Username))
+        if (await context.Users.AnyAsync(u => u.Username == request.Username))          
         {
             return null; // User already exists
         }
@@ -126,5 +126,20 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
         context.Users.Update(user);
         await context.SaveChangesAsync();
         return refreshToken;
+    }
+
+
+    public async Task<TokenResponseDto> LoginWithGoogleAsync(string email, string googleId)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user is null)
+        {
+            user = new User { Username = email, Email = email, GoogleId = googleId};
+
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            await WeddingSeeder.SeedDefaultWeddingDataAsync(user, context);
+        }
+        return await CreateTokenResponseDto(user);
     }
 }

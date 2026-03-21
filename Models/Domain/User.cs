@@ -8,4 +8,7 @@ public class User
     public string Role { get; set; } = string.Empty; // Default role
     public string? RefreshToken { get; set; } = string.Empty;
     public DateTime? RefreshTokenExpiryTime { get; set; }
+
+    public string? GoogleId { get; set; }
+    public string? Email { get; set; }
 }

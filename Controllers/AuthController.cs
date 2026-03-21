@@ -1,6 +1,10 @@
+using System.Security.Claims;
 using HappyWedding.Api.Models.Domain;
 using HappyWedding.Api.Models.Dtos.Auth;
 using HappyWedding.Api.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,6 +53,28 @@ public class AuthController(IAuthService authService) : ControllerBase
         return Ok(tokenResponse);
     }
 
+
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
+    {
+        var redirectUrl = Url.Action("GoogleCallback", "Auth");
+        var props = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(props, GoogleDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet("google-callback")]
+    public async Task<ActionResult<TokenResponseDto>> GoogleCallback()
+    {
+        var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!result.Succeeded) return Unauthorized();
+
+        var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+        if (email is null) return BadRequest("Email claim not found");
+        var googleId = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (googleId is null) return BadRequest("Google ID claim not found");
+        var token = await authService.LoginWithGoogleAsync(email, googleId);
+        return Ok(token);
+    }
 
     [Authorize]
     [HttpGet]
