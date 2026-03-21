@@ -24,6 +24,16 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddSingleton<CloudinaryDotNet.Cloudinary>(sp =>
+{
+    var config = builder.Configuration.GetSection("Cloudinary");
+    var account = new CloudinaryDotNet.Account(
+        config["CloudName"],
+        config["ApiKey"],
+        config["ApiSecret"]
+    );
+    return new CloudinaryDotNet.Cloudinary(account);
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
