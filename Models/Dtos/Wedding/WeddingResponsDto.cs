@@ -1,8 +1,6 @@
-// using HappyWedding.Api.DTOs.Milestone;
+namespace HappyWedding.Api.Models.Dtos.Wedding;
 
-namespace HappyWedding.Api.DTOs.Wedding;
-
-public class WeddingResponseDto
+public record WeddingResponseDto
 {
     public Guid Id { get; set; }
     public string Name1 { get; set; } = string.Empty;

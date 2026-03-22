@@ -1,6 +1,7 @@
 using HappyWedding.Api.Data;
 using HappyWedding.Api.Models.Dtos.Invitation;
 using HappyWedding.Api.Models.Dtos.Milestone;
+using HappyWedding.Api.Models.Dtos.Photo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -36,8 +37,6 @@ public class InvitationController(HappyWeddingDbContext db) : ControllerBase
                 Tagline = w.Tagline,
 
                 Milestones = w.Milestones
-                    // .Where(m => m.Completed)           // ← only show completed ones to guests?
-                    // .OrderBy(m => m.Date)
                     .Select(m => new MilestoneResponseDto
                     {
                         Id = m.Id,
@@ -58,5 +57,27 @@ public class InvitationController(HappyWeddingDbContext db) : ControllerBase
         }
 
         return Ok(wedding);
+    }
+
+    // GET api/invitation/{weddingId}/photos
+    [HttpGet("{weddingId:guid}/photos")]
+    public async Task<IActionResult> GetInvitationPhotos(Guid weddingId)
+    {
+        var exists = await db.Weddings.AnyAsync(w => w.Id == weddingId);
+        if (!exists) return NotFound();
+
+        var photos = await db.WeddingPhotos
+            .AsNoTracking()
+            .Where(p => p.WeddingId == weddingId)
+            .Select(p => new PhotoResponseDto
+            {
+                Id = p.Id,
+                ImageUrl = p.ImageUrl,
+                AspectRatio = p.AspectRatio,
+                Caption = p.Caption,
+            })
+            .ToListAsync();
+
+        return Ok(photos);
     }
 }

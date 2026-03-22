@@ -1,58 +1,40 @@
 using System.Security.Claims;
-using HappyWedding.Api.Data;
 using HappyWedding.Api.Models.Domain;
 using HappyWedding.Api.Models.Dtos.Guest;
+using HappyWedding.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HappyWedding.Api.Controllers;
 
 [Route("api/wedding/guests")]
 [ApiController]
 [Authorize]
-public class GuestController(HappyWeddingDbContext db) : ControllerBase
+public class GuestController(IGuestService guestService) : ControllerBase
 {
     private string CurrentUserId =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new UnauthorizedAccessException();
 
-    private async Task<Wedding?> GetOwnedWeddingAsync() =>
-        await db.Weddings.FirstOrDefaultAsync(w => w.UserId == CurrentUserId);
-
     // GET api/wedding/guests
     [HttpGet]
     public async Task<IActionResult> GetGuests()
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var guests = await guestService.GetGuestsAsync(userId);
 
-        var guests = await db.Guests
-            .Where(g => g.WeddingId == wedding.Id)
-            .Select(g => MapToResponse(g))
-            .ToListAsync();
-
-        return Ok(guests);
+        return Ok(guests.Select(MapToResponse).ToList());
     }
 
     // POST api/wedding/guests
     [HttpPost]
     public async Task<IActionResult> AddGuest([FromBody] CreateGuestDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var guest = await guestService.AddGuestAsync(userId, dto);
 
-        var guest = new Guest
-        {
-            WeddingId = wedding.Id,
-            Name = dto.Name.Trim(),
-            Note = string.IsNullOrWhiteSpace(dto.Note) ? null : dto.Note.Trim(),
-            SeatCount = Math.Max(1, dto.SeatCount),
-            Side = dto.Side,
-        };
-
-        db.Guests.Add(guest);
-        await db.SaveChangesAsync();
+        if (guest is null)
+            return NotFound(new { message = "No wedding found." });
 
         return CreatedAtAction(nameof(GetGuests), MapToResponse(guest));
     }
@@ -61,18 +43,12 @@ public class GuestController(HappyWeddingDbContext db) : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateGuest(Guid id, [FromBody] UpdateGuestDto dto)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var guest = await guestService.UpdateGuestAsync(userId, id, dto);
 
-        var guest = await db.Guests
-            .FirstOrDefaultAsync(g => g.Id == id && g.WeddingId == wedding.Id);
-        if (guest is null) return NotFound(new { message = "Guest not found." });
+        if (guest is null)
+            return NotFound(new { message = "Guest not found." });
 
-        guest.Name = dto.Name.Trim();
-        guest.Note = string.IsNullOrWhiteSpace(dto.Note) ? null : dto.Note.Trim();
-        guest.SeatCount = Math.Max(1, dto.SeatCount);
-
-        await db.SaveChangesAsync();
         return Ok(MapToResponse(guest));
     }
 
@@ -80,15 +56,12 @@ public class GuestController(HappyWeddingDbContext db) : ControllerBase
     [HttpPatch("{id:guid}/toggle")]
     public async Task<IActionResult> ToggleConfirmed(Guid id)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var guest = await guestService.ToggleConfirmedAsync(userId, id);
 
-        var guest = await db.Guests
-            .FirstOrDefaultAsync(g => g.Id == id && g.WeddingId == wedding.Id);
-        if (guest is null) return NotFound(new { message = "Guest not found." });
+        if (guest is null)
+            return NotFound(new { message = "Guest not found." });
 
-        guest.Confirmed = !guest.Confirmed;
-        await db.SaveChangesAsync();
         return Ok(MapToResponse(guest));
     }
 
@@ -96,15 +69,12 @@ public class GuestController(HappyWeddingDbContext db) : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteGuest(Guid id)
     {
-        var wedding = await GetOwnedWeddingAsync();
-        if (wedding is null) return NotFound(new { message = "No wedding found." });
+        var userId = CurrentUserId;
+        var deleted = await guestService.DeleteGuestAsync(userId, id);
 
-        var guest = await db.Guests
-            .FirstOrDefaultAsync(g => g.Id == id && g.WeddingId == wedding.Id);
-        if (guest is null) return NotFound(new { message = "Guest not found." });
+        if (!deleted)
+            return NotFound(new { message = "Guest not found." });
 
-        db.Guests.Remove(guest);
-        await db.SaveChangesAsync();
         return NoContent();
     }
 

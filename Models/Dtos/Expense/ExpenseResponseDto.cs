@@ -1,6 +1,6 @@
 namespace HappyWedding.Api.Models.Dtos.Expense;
 
-public class ExpenseResponseDto
+public record ExpenseResponseDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;

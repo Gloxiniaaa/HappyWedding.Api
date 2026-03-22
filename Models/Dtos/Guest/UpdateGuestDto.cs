@@ -3,7 +3,7 @@ using HappyWedding.Api.Models.Domain;
 namespace HappyWedding.Api.Models.Dtos.Guest;
 
 // UpdateGuestDto.cs
-public class UpdateGuestDto
+public record UpdateGuestDto
 {
     public string Name { get; set; } = string.Empty;
     public string? Note { get; set; }

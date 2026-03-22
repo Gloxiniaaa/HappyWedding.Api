@@ -1,17 +1,17 @@
 using System.Security.Claims;
-using HappyWedding.Api.Data;
 using HappyWedding.Api.DTOs.Wedding;
 using HappyWedding.Api.Models.Domain;
+using HappyWedding.Api.Models.Dtos.Wedding;
+using HappyWedding.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HappyWedding.Api.Controllers;
 
 [Route("api/wedding")]
 [ApiController]
 [Authorize]
-public class WeddingController(HappyWeddingDbContext db) : ControllerBase
+public class WeddingController(IWeddingService weddingService) : ControllerBase
 {
     private string CurrentUserId =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -22,10 +22,7 @@ public class WeddingController(HappyWeddingDbContext db) : ControllerBase
     public async Task<IActionResult> GetMyWedding()
     {
         var userId = CurrentUserId;
-
-        var wedding = await db.Weddings
-            .Include(w => w.Milestones)
-            .FirstOrDefaultAsync(w => w.UserId == userId);
+        var wedding = await weddingService.GetMyWeddingAsync(userId);
 
         if (wedding is null)
             return NotFound(new { message = "No wedding found." });
@@ -37,23 +34,10 @@ public class WeddingController(HappyWeddingDbContext db) : ControllerBase
     public async Task<IActionResult> CreateWedding([FromBody] CreateWeddingDto dto)
     {
         var userId = CurrentUserId;
+        var wedding = await weddingService.CreateWeddingAsync(userId, dto);
 
-        var exists = await db.Weddings.AnyAsync(w => w.UserId == userId);
-        if (exists)
+        if (wedding is null)
             return Conflict(new { message = "You already have a wedding." });
-
-        var wedding = new Wedding
-        {
-            UserId = userId,
-            Name1 = dto.Name1,
-            Name2 = dto.Name2,
-            Date = dto.Date,
-            Location = dto.Location,
-            Tagline = dto.Tagline,
-        };
-
-        db.Weddings.Add(wedding);
-        await db.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetMyWedding), MapToResponse(wedding));
     }
@@ -62,20 +46,11 @@ public class WeddingController(HappyWeddingDbContext db) : ControllerBase
     public async Task<IActionResult> UpdateWedding([FromBody] UpdateWeddingDto dto)
     {
         var userId = CurrentUserId;
-
-        var wedding = await db.Weddings
-            .FirstOrDefaultAsync(w => w.UserId == userId);
+        var wedding = await weddingService.UpdateWeddingAsync(userId, dto);
 
         if (wedding is null)
             return NotFound(new { message = "No wedding found." });
 
-        wedding.Name1 = dto.Name1;
-        wedding.Name2 = dto.Name2;
-        wedding.Date = dto.Date;
-        wedding.Location = dto.Location;
-        wedding.Tagline = dto.Tagline;
-
-        await db.SaveChangesAsync();
         return Ok(MapToResponse(wedding));
     }
 
@@ -83,18 +58,14 @@ public class WeddingController(HappyWeddingDbContext db) : ControllerBase
     public async Task<IActionResult> DeleteWedding()
     {
         var userId = CurrentUserId;
+        var deleted = await weddingService.DeleteWeddingAsync(userId);
 
-        var wedding = await db.Weddings
-            .FirstOrDefaultAsync(w => w.UserId == userId);
-
-        if (wedding is null)
+        if (!deleted)
             return NotFound(new { message = "No wedding found." });
 
-        db.Weddings.Remove(wedding);
-        await db.SaveChangesAsync();
         return NoContent();
     }
-    
+
     // ── Mapper ────────────────────────────────────────────────────────────────
     private static WeddingResponseDto MapToResponse(Wedding w) => new()
     {

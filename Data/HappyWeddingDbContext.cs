@@ -1,7 +1,4 @@
-using HappyWedding.Api.Data.Configurations;
 using HappyWedding.Api.Models.Domain;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HappyWedding.Api.Data;
@@ -14,6 +11,7 @@ public class HappyWeddingDbContext(DbContextOptions<HappyWeddingDbContext> optio
     public DbSet<Guest> Guests => Set<Guest>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<ExpenseItem> ExpenseItems => Set<ExpenseItem>();
+    public DbSet<WeddingPhoto> WeddingPhotos => Set<WeddingPhoto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,6 +1,6 @@
 namespace HappyWedding.Api.Models.Dtos.Milestone;
 
-public class MilestoneResponseDto
+public record MilestoneResponseDto
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;

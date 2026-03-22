@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         name: myAllowSpecificOrigins,
-        policy  =>
+        policy =>
         {
             policy.WithOrigins("http://localhost:8080", "https://happy-wedding-gules.vercel.app") // Your frontend URL
                 .AllowAnyHeader()
@@ -24,6 +24,15 @@ builder.Services.AddCors(options =>
         });
 });
 
+
+// ── Bind Cloudinary settings ──────────────────────────────────────────────────
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("Cloudinary"));
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
+{
+   o.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50 MB
+});
+// ── Register services ─────────────────────────────────────────────────────────
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -33,7 +42,12 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<HappyWeddingDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IWeddingService, WeddingService>();
+builder.Services.AddScoped<IGuestService, GuestService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
