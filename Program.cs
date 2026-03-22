@@ -1,84 +1,20 @@
-using System.Text;
-using HappyWedding.Api.Data;
-using HappyWedding.Api.Services;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+using HappyWedding.Api.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
-// 2. Add CORS services
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        name: myAllowSpecificOrigins,
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:8080", "https://happy-wedding-gules.vercel.app") // Your frontend URL
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
-
-
-// ── Bind Cloudinary settings ──────────────────────────────────────────────────
-builder.Services.Configure<CloudinarySettings>(
-    builder.Configuration.GetSection("Cloudinary"));
-builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
-{
-   o.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50 MB
-});
-// ── Register services ─────────────────────────────────────────────────────────
+builder.Services
+    .AddCorsPolicy()
+    .AddCloudinarySettings(builder.Configuration)
+    .AddApplicationServices()
+    .AddDatabase(builder.Configuration)
+    .AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
-builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddDbContext<HappyWeddingDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DevelopmentConnection")));
-
-builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IWeddingService, WeddingService>();
-builder.Services.AddScoped<IGuestService, GuestService>();
-builder.Services.AddScoped<IExpenseService, ExpenseService>();
-builder.Services.AddScoped<IMilestoneService, MilestoneService>();
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new()
-    {
-        ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Authentication:Jwt:Issuer"],
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["Authentication:Jwt:Audience"],
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Authentication:Jwt:Key"]!)),
-    };
-})
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddGoogle(options =>
-{
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme; // Google needs this
-});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -86,10 +22,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors(myAllowSpecificOrigins);
+app.UseCorsPolicy();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
