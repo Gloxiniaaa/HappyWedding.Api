@@ -1,6 +1,4 @@
-// using HappyWedding.Api.DTOs.Milestone;
-
-namespace HappyWedding.Api.DTOs.Wedding;
+namespace HappyWedding.Api.Models.Dtos.Wedding;
 
 public record WeddingResponseDto
 {

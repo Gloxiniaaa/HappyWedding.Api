@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using HappyWedding.Api.DTOs.Wedding;
 using HappyWedding.Api.Models.Domain;
+using HappyWedding.Api.Models.Dtos.Wedding;
 using HappyWedding.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
