@@ -13,7 +13,7 @@ namespace HappyWedding.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(UserDto request)
@@ -73,21 +73,24 @@ public class AuthController(IAuthService authService) : ControllerBase
         var googleId = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
         if (googleId is null) return BadRequest("Google ID claim not found");
         var token = await authService.LoginWithGoogleAsync(email, googleId);
-        return Ok(token);
+        var frontendUrl = configuration["Frontend:Url"];
+        // var frontendUrl = " http://localhost:8080";
+        return Redirect($"{frontendUrl}/auth?access_token={token.AccessToken}&refresh_token={token.RefreshToken}");
+        // return Ok(token);
     }
 
-    [Authorize]
-    [HttpGet]
-    public IActionResult AuthenticatedEndpoint()
-    {
-        return Ok("You are authenticated!");
-    }
+    // [Authorize]
+    // [HttpGet]
+    // public IActionResult AuthenticatedEndpoint()
+    // {
+    //     return Ok("You are authenticated!");
+    // }
 
-    [Authorize(Roles = "Admin")]
-    [HttpGet("admin")]
-    public IActionResult AdminOnlyEndpoint()
-    {
-        return Ok("You are an admin!");
-    }
+    // [Authorize(Roles = "Admin")]
+    // [HttpGet("admin")]
+    // public IActionResult AdminOnlyEndpoint()
+    // {
+    //     return Ok("You are an admin!");
+    // }
 
 }
