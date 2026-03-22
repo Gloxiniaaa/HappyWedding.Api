@@ -4,6 +4,7 @@ using HappyWedding.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HappyWedding.Api.Migrations
 {
     [DbContext(typeof(HappyWeddingDbContext))]
-    partial class HappyWeddingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321032926_AddUserEmail")]
+    partial class AddUserEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -253,41 +256,6 @@ namespace HappyWedding.Api.Migrations
                     b.ToTable("Weddings", (string)null);
                 });
 
-            modelBuilder.Entity("HappyWedding.Api.Models.Domain.WeddingPhoto", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AspectRatio")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasDefaultValue("1:1");
-
-                    b.Property<string>("Caption")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("WeddingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WeddingId");
-
-                    b.ToTable("WeddingPhotos");
-                });
-
             modelBuilder.Entity("HappyWedding.Api.Models.Domain.ExpenseCategory", b =>
                 {
                     b.HasOne("HappyWedding.Api.Models.Domain.Wedding", "Wedding")
@@ -325,17 +293,6 @@ namespace HappyWedding.Api.Migrations
                 {
                     b.HasOne("HappyWedding.Api.Models.Domain.Wedding", "Wedding")
                         .WithMany("Milestones")
-                        .HasForeignKey("WeddingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Wedding");
-                });
-
-            modelBuilder.Entity("HappyWedding.Api.Models.Domain.WeddingPhoto", b =>
-                {
-                    b.HasOne("HappyWedding.Api.Models.Domain.Wedding", "Wedding")
-                        .WithMany()
                         .HasForeignKey("WeddingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

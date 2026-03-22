@@ -1,6 +1,10 @@
+using System.Security.Claims;
 using HappyWedding.Api.Models.Domain;
 using HappyWedding.Api.Models.Dtos.Auth;
 using HappyWedding.Api.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +13,7 @@ namespace HappyWedding.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(UserDto request)
@@ -50,18 +54,43 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
 
-    [Authorize]
-    [HttpGet]
-    public IActionResult AuthenticatedEndpoint()
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
     {
-        return Ok("You are authenticated!");
+        var redirectUrl = Url.Action("GoogleCallback", "Auth");
+        var props = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(props, GoogleDefaults.AuthenticationScheme);
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpGet("admin")]
-    public IActionResult AdminOnlyEndpoint()
+    [HttpGet("google-callback")]
+    public async Task<ActionResult<TokenResponseDto>> GoogleCallback()
     {
-        return Ok("You are an admin!");
+        var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!result.Succeeded) return Unauthorized();
+
+        var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+        if (email is null) return BadRequest("Email claim not found");
+        var googleId = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (googleId is null) return BadRequest("Google ID claim not found");
+        var token = await authService.LoginWithGoogleAsync(email, googleId);
+        var frontendUrl = configuration["Frontend:Url"];
+        // var frontendUrl = " http://localhost:8080";
+        return Redirect($"{frontendUrl}/auth?access_token={token.AccessToken}&refresh_token={token.RefreshToken}");
+        // return Ok(token);
     }
+
+    // [Authorize]
+    // [HttpGet]
+    // public IActionResult AuthenticatedEndpoint()
+    // {
+    //     return Ok("You are authenticated!");
+    // }
+
+    // [Authorize(Roles = "Admin")]
+    // [HttpGet("admin")]
+    // public IActionResult AdminOnlyEndpoint()
+    // {
+    //     return Ok("You are an admin!");
+    // }
 
 }

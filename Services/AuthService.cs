@@ -16,7 +16,7 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
 {
     public async Task<User?> RegisterAsync(UserDto request)
     {
-        if (await context.Users.AnyAsync(u => u.Username == request.Username))
+        if (await context.Users.AnyAsync(u => u.Username == request.Username))          
         {
             return null; // User already exists
         }
@@ -74,12 +74,12 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
             new Claim(ClaimTypes.Role, user.Role)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("Jwt:Key")));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("Authentication:Jwt:Key")));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var tokenDesciptor = new JwtSecurityToken
         (
-            issuer: configuration.GetValue<string>("Jwt:Issuer"),
-            audience: configuration.GetValue<string>("Jwt:Audience"),
+            issuer: configuration.GetValue<string>("Authentication:Jwt:Issuer"),
+            audience: configuration.GetValue<string>("Authentication:Jwt:Audience"),
             claims: claims,
             expires: DateTime.Now.AddHours(1),
             signingCredentials: creds
@@ -126,5 +126,20 @@ public class AuthService(HappyWeddingDbContext context, IConfiguration configura
         context.Users.Update(user);
         await context.SaveChangesAsync();
         return refreshToken;
+    }
+
+
+    public async Task<TokenResponseDto> LoginWithGoogleAsync(string email, string googleId)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user is null)
+        {
+            user = new User { Username = email, Email = email, GoogleId = googleId};
+
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            await WeddingSeeder.SeedDefaultWeddingDataAsync(user, context);
+        }
+        return await CreateTokenResponseDto(user);
     }
 }
