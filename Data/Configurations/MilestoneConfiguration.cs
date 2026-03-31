@@ -13,7 +13,7 @@ public class MilestoneConfiguration : IEntityTypeConfiguration<Milestone>
         builder.HasKey(m => m.Id);
 
         builder.Property(m => m.Id)
-            .HasDefaultValueSql("NEWID()"); // SQL Server
+            .HasDefaultValueSql("gen_random_uuid()"); // PostgreSQL
 
         builder.Property(m => m.Title)
             .IsRequired()
@@ -29,7 +29,7 @@ public class MilestoneConfiguration : IEntityTypeConfiguration<Milestone>
 
         builder.Property(m => m.Date)
             .IsRequired()
-            .HasColumnType("date"); // SQL Server: date only
+            .HasColumnType("date"); // PostgreSQL: date only
 
         builder.Property(m => m.Completed)
             .IsRequired()

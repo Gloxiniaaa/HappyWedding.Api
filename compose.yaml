@@ -1,0 +1,44 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+services:
+  server:
+    build:
+      context: .
+      target: final
+    image: happywedc
+    container_name: happywedding-api
+    ports:
+      - "5057:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+
+  db:
+    image: postgres:18
+    restart: always
+    user: postgres
+    secrets:
+      - db-password
+    volumes:
+      - hpwd-db-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=happyweddingdb
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "happyweddingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hpwd-db-data:
+
+secrets:
+  db-password:
+    file: Data/password.txt

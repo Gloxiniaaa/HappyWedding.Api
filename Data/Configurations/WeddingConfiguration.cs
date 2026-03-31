@@ -13,7 +13,7 @@ public class WeddingConfiguration : IEntityTypeConfiguration<Wedding>
         builder.HasKey(w => w.Id);
 
         builder.Property(w => w.Id)
-            .HasDefaultValueSql("NEWID()"); // SQL Server
+            .HasDefaultValueSql("gen_random_uuid()"); // PostgreSQL
 
         builder.HasIndex(w => w.UserId)
             .IsUnique()
@@ -41,7 +41,7 @@ public class WeddingConfiguration : IEntityTypeConfiguration<Wedding>
 
         builder.Property(w => w.Date)
             .IsRequired()
-            .HasColumnType("date"); // SQL Server: date only, no time component
+            .HasColumnType("date"); // PostgreSQL: date only, no time component
 
         // delete wedding → delete its milestones
         builder.HasMany(w => w.Milestones)

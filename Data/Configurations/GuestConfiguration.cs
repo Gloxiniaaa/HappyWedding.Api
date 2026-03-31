@@ -29,7 +29,7 @@ public class GuestConfiguration : IEntityTypeConfiguration<Guest>
 
         builder.Property(g => g.CreatedAt)
             .IsRequired()
-            .HasDefaultValueSql("GETUTCDATE()");   // or use .HasDefaultValue(DateTime.UtcNow) if preferred
+            .HasDefaultValueSql("now()");   // PostgreSQL: current UTC timestamp
 
         builder.Property(g => g.UpdatedAt)
             .IsRequired(false);                    // nullable
